@@ -1,0 +1,334 @@
+{
+  "title": "🐦 Twitter Dashboard 🐦",
+  "version": "2.1",
+  "settings": {
+    "pagenumber": 0,
+    "editable": true,
+    "fullscreenEnabled": false,
+    "parameters": {
+      "undefined": "",
+      "neodash_tweet_id": "1478783378887516166",
+      "neodash_user_username": "GlobalNewsCover"
+    }
+  },
+  "pages": [
+    {
+      "title": "Main Page",
+      "reports": [
+        {
+          "title": "🐦 Twitter Dashboard 🐦",
+          "query": "https://global-uploads.webflow.com/5e157548d6f7910beea4e2d6/6304a4144b96900853d82d9b_Twitter-Logo-2010.png",
+          "width": 4,
+          "height": 1,
+          "x": 0,
+          "y": 0,
+          "type": "iframe",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Number for Fake News Over Time",
+          "query": "MATCH(f:Fake)\nWITH Date(f.timestamp) as Timestamp, Count(f) as Tweets\nORDER BY Timestamp\nRETURN Timestamp, Tweets",
+          "width": 5,
+          "height": 2,
+          "x": 7,
+          "y": 3,
+          "type": "line",
+          "selection": {
+            "x": "Timestamp",
+            "value": [
+              "Tweets"
+            ]
+          },
+          "settings": {}
+        },
+        {
+          "title": "List of Fake Tweets",
+          "query": "MATCH(n:Fake)\nreturn n.id as id, n.url as url, n.timestamp as timestamp\nORDER by n.retweetCount DESC;\n\n",
+          "width": 12,
+          "height": 2,
+          "x": 0,
+          "y": 1,
+          "type": "table",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Number of Fake News",
+          "query": "Match(n:Tweet)\nReturn n.label as Label, Count(n) as `Number of Tweets`\n\n\n",
+          "width": 4,
+          "height": 2,
+          "x": 0,
+          "y": 3,
+          "type": "pie",
+          "selection": {
+            "index": "Label",
+            "value": "Number of Tweets",
+            "key": "(none)"
+          },
+          "settings": {}
+        },
+        {
+          "title": "Number of Fake Tweets",
+          "query": "MATCH(n:Fake)\nReturn count(n)\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 4,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Number of times Fake Tweet is retweeted",
+          "query": "Match(n:Fake)\nReturn SUM(n.retweetCount)\n\n\n",
+          "width": 5,
+          "height": 1,
+          "x": 7,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Fake News Gauge",
+          "query": "MATCH (f:Fake)\nWITH count(f) as cf\nMATCH(n:Tweet)\nRETURN toFloat(cf) / toFloat(count(n)) * 100\n",
+          "width": 3,
+          "height": 2,
+          "x": 4,
+          "y": 3,
+          "type": "gauge",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "",
+          "query": "MATCH(u:User)\nMATCH p = (u)-[:Tweeted]->(n:Fake)\nRETURN u.username AS Username, count(n) as `Count of Fake Tweets`\nORDER BY count(n) DESC\n",
+          "width": 12,
+          "height": 2,
+          "x": 0,
+          "y": 5,
+          "type": "table",
+          "selection": {},
+          "settings": {}
+        }
+      ]
+    },
+    {
+      "title": "Individual Tweet Search",
+      "reports": [
+        {
+          "title": "",
+          "query": "MATCH (n:`Tweet`) \nWHERE toLower(toString(n.`id`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`id` as value ORDER BY size(toString(value)) ASC LIMIT 5",
+          "width": 3,
+          "height": 1,
+          "x": 0,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Node Property",
+            "entityType": "Tweet",
+            "propertyType": "id",
+            "parameterName": "neodash_tweet_id"
+          }
+        },
+        {
+          "title": "Network Graph",
+          "query": "MATCH (n:Tweet)\nMATCH p = (n)-[*..3]-()\nWHERE n.id = $neodash_tweet_id \nRETURN n,p\n",
+          "width": 12,
+          "height": 2,
+          "x": 0,
+          "y": 3,
+          "type": "graph",
+          "selection": {
+            "Tweet": "label",
+            "Fake": "label",
+            "User": "(label)"
+          },
+          "settings": {}
+        },
+        {
+          "title": "Tweet Text",
+          "query": "Match(n:Tweet)\nWHERE n.id = $neodash_tweet_id \nreturn n.text\n\n",
+          "width": 9,
+          "height": 1,
+          "x": 3,
+          "y": 0,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Tweet Information",
+          "query": "MATCH (n:Tweet)\nWHERE n.id = $neodash_tweet_id \nRETURN n.id As Id, n.url AS Url , CASE WHEN n.label = 0 THEN \"Real\" ELSE \"Fake\" END as Label, n.likeCount as `Like Count`\n\n\n",
+          "width": 12,
+          "height": 1,
+          "x": 0,
+          "y": 2,
+          "type": "table",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Total Retweet Outreach",
+          "query": "MATCH p = (n:Tweet)<-[:Quoted]-(q)\nWHERE n.id = $neodash_tweet_id \nRETURN n.retweetCount + SUM(q.retweetCount)",
+          "width": 3,
+          "height": 1,
+          "x": 3,
+          "y": 1,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Total Reply Outreach",
+          "query": "MATCH p = (n:Tweet)<-[:Quoted]-(q)\nWHERE n.id = $neodash_tweet_id \nRETURN n.replyCount + SUM(q.replyCount)\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 9,
+          "y": 1,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Total Quote Outreach",
+          "query": "MATCH p = (n:Tweet)<-[:Quoted]-(q)\nWHERE n.id = $neodash_tweet_id \nRETURN n.quoteCount + SUM(q.quoteCount)\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 6,
+          "y": 1,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Total Like Outreach",
+          "query": "MATCH p = (n:Tweet)<-[:Quoted]-(q)\nWHERE n.id = $neodash_tweet_id \nRETURN n.likeCount + sum(q.likeCount)\n\n\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 0,
+          "y": 1,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        }
+      ]
+    },
+    {
+      "title": "Individual User Search",
+      "reports": [
+        {
+          "title": "",
+          "query": "MATCH (n:`User`) \nWHERE toLower(toString(n.`username`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`username` as value ORDER BY size(toString(value)) ASC LIMIT 5",
+          "width": 3,
+          "height": 1,
+          "x": 0,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Node Property",
+            "entityType": "User",
+            "propertyType": "username",
+            "parameterName": "neodash_user_username"
+          }
+        },
+        {
+          "title": "Number of Tweets",
+          "query": "Match(u:User)\nMATCH p=(u)-[:Tweeted]->(t:Tweet)\nwhere u.username = $neodash_user_username\nWITH count(t) as ct\nMATCH q=(u)-[:Tweeted]->(f:Fake)\nwhere u.username = $neodash_user_username\nRETURN count(f) as `Number of Fake Tweets`, ct as `Number of Tweets`\n\n",
+          "width": 6,
+          "height": 1,
+          "x": 3,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Fake Tweets Gauge",
+          "query": "Match(u:User)\nMATCH p=(u)-[:Tweeted]->(t:Tweet)\nwhere u.username = $neodash_user_username\nWITH count(t) as ct\nMATCH q=(u)-[:Tweeted]->(f:Fake)\nwhere u.username = $neodash_user_username\nRETURN toFloat(count(f)) / toFloat(ct) * 100\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 9,
+          "y": 0,
+          "type": "gauge",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Total Replys",
+          "query": "Match(u:User)\nwhere u.username = $neodash_user_username\nMATCH p=(u)-[:Tweeted]->(t)\nRETURN sum(t.replyCount)\n\n\n\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 9,
+          "y": 1,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Total Likes",
+          "query": "Match(u:User)\nMATCH p=(u)-[:Tweeted]->(t)\nwhere u.username = $neodash_user_username\nRETURN sum(t.likeCount)\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 0,
+          "y": 1,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Total Quotes",
+          "query": "Match(u:User)\nwhere u.username = $neodash_user_username\nMATCH p=(u)-[:Tweeted]->(t)\nRETURN sum(t.quoteCount)\n\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 6,
+          "y": 1,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Total Retweets",
+          "query": "Match(u:User)\nwhere u.username = $neodash_user_username\nMATCH p=(u)-[:Tweeted]->(t)\nRETURN sum(t.retweetCount)\n\n\n\n\n\n",
+          "width": 3,
+          "height": 1,
+          "x": 3,
+          "y": 1,
+          "type": "value",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "title": "Network Graphs",
+          "query": "Match(u:User)\nMATCH p=(u)-[*]-()\nwhere u.username = $neodash_user_username\nRETURN u,p\n\n\n",
+          "width": 12,
+          "height": 2,
+          "x": 0,
+          "y": 2,
+          "type": "graph",
+          "selection": {
+            "User": "(label)",
+            "Tweet": "label",
+            "Fake": "label"
+          },
+          "settings": {}
+        },
+        {
+          "title": "",
+          "query": "MATCH(u:User)\nMATCH p =(u)-[:Tweeted]->(t)\nWHERE u.username = $neodash_user_username\nRETURN t.id as Id, t.url as Url, CASE WHEN t.label = 0 THEN \"Real\" ELSE \"Fake\" END as Label\nORDER BY t.label DESC\n",
+          "width": 12,
+          "height": 2,
+          "x": 0,
+          "y": 4,
+          "type": "table",
+          "selection": {},
+          "settings": {}
+        }
+      ]
+    }
+  ],
+  "parameters": {}
+}
